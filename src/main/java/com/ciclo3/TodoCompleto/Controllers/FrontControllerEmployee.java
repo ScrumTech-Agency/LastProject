@@ -1,0 +1,116 @@
+package com.ciclo3.TodoCompleto.Controllers;
+
+import com.ciclo3.TodoCompleto.Models.Employee;
+import com.ciclo3.TodoCompleto.Models.Enterprise;
+import com.ciclo3.TodoCompleto.Models.Enum_RoleName;
+import com.ciclo3.TodoCompleto.Service.EmployeeManagerInterface;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Controller
+public class FrontControllerEmployee {
+    @Autowired
+    private EmployeeManagerInterface employeeManager;
+
+    //Método para llamar lista de empleados
+    @GetMapping("/welcomeEmployee")
+    public String getWelcome(Model model) {
+
+        model.addAttribute("rol", Enum_RoleName.ROLE_ADMIN);
+        model.addAttribute("employees", employeeManager.getEmployees());
+
+        return "welcome-employee-new";
+    }
+//Metodo para registrar empleado
+    @GetMapping("/addemployee")
+    public String getAddEmployee(Model model){
+
+        model.addAttribute("employeeRegister", new Employee());
+        model.addAttribute("rolesList",Enum_RoleName.values());
+        return "add-employee-new";
+    }
+
+
+
+    @PostMapping("/employee/register")
+    public String postEmployee(@ModelAttribute("employeeRegister")  Employee employeeParametro) {
+        try {
+
+            String mensaje = employeeManager.setEmployee(employeeParametro);
+
+            return "redirect:/welcomeEmployee";
+        } catch (Exception e) {
+            return "redirect:/error";
+        }
+    }
+    //Hasta aqui los metodos para registrar empleados
+
+    // Metodos Para actualizar EMpleador
+    @GetMapping("/employee/update/{id}")
+    public String getUsuario(@PathVariable Long id, Model model){
+        try {
+            model.addAttribute("userUpdate",employeeManager.getEmployee(id));
+            model.addAttribute("rolesList", Enum_RoleName.values());
+            return "update-employee";
+        } catch (Exception e) {
+            return "redirect:/error";
+        }
+
+    }
+    @PutMapping("/employee/front/update")
+    public String putUsuario(@ModelAttribute("userUpdate") Employee employeeParametro) {
+        try {
+            employeeManager.UpdateEmployee(employeeParametro, employeeParametro.getIdEmpl());
+            return "redirect:/welcomeEmployee";
+        } catch (Exception e) {
+            return "redirect:/error";
+        }
+    }
+
+    @GetMapping("/updateUser")
+    public String getUpdateUser(Model model){
+
+        return "update-employee";
+    }
+    //Metodo para mostrar tranasacciones de un empleado
+    @GetMapping("/transacciones/{idEmpleado}")
+    public String EmployeeOfEnterprise(@PathVariable Long idEmpleado, Model model){
+
+        try {
+            Employee empleadoX = employeeManager.getEmployee(idEmpleado);
+            model.addAttribute("TrxEmployee",empleadoX.getTransactions());
+            System.out.println(empleadoX.getTransactions());
+            return "transactionOfEmployee";
+        } catch (Exception e) {
+            return "redirect:/error";
+        }
+    }
+
+
+//Métodos para Borrar empleados
+
+
+    @DeleteMapping("/employee/front/{id}")
+    public String deleteUser(@PathVariable Long id, Model model){
+        System.out.println("pala");
+        try {
+            Employee consult = employeeManager.getEmployee(id);
+            System.out.println(consult);
+        } catch (Exception e) {
+
+            throw new RuntimeException(e);
+        }
+        try {
+
+            employeeManager.DeleteEmployee(id);
+            return "redirect:/welcomeEmployee";
+        } catch (Exception e) {
+            return "redirect:/error";
+        }
+    }
+}
